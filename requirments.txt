@@ -1,5 +1,6 @@
-langchain[groq]
 langchain[openai]
 python-dotenv
 langgraph
 langchain_mcp_adapters
+streamlit
+google.genai
