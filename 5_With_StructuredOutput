@@ -1,0 +1,51 @@
+from dotenv import load_dotenv
+from pydantic import BaseModel
+load_dotenv()
+from langgraph.prebuilt import create_react_agent
+
+class MailResponse(BaseModel): # This is the structured output format
+    subject: str
+    body: str
+    summary: str # You can add more fields as per your requirement
+
+
+agent = create_react_agent(
+   model="groq:llama-3.3-70b-versatile", 
+   tools=[],
+   response_format=MailResponse
+   )
+
+
+response = agent.invoke(
+    {
+        "messages":[
+            {"role":"user",
+             "content":"Write a mail applying for leave"
+             }]
+    }
+)
+
+print("----------------------------")
+
+print(response)
+print("----------------------------")
+
+print(response["structured_response"])
+
+print("----------------------------")
+
+print(response["structured_response"].subject)
+
+print("----------------------------")
+
+print(response["structured_response"].body)
+
+print("----------------------------")
+
+print(response["structured_response"].summary)
+
+
+
+
+
+
