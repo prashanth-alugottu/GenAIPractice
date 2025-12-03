@@ -14,3 +14,11 @@ result = agent.invoke({
 })
 
 print(result["messages"][-1].content)
+
+
+
+# This can also be use
+
+# model = ChatOpenAI(model="gpt-4.1") 
+# response = model.invoke("Why do parrots talk?")
+# print(response.content)
