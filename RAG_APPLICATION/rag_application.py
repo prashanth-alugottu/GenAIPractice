@@ -76,7 +76,6 @@ if st.button("🔍 Get Answer"):
         st.error("No answer found in the vector store!")
     else:
         context = "\n\n".join([d.page_content for d in docs])
-
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
         prompt = f"""

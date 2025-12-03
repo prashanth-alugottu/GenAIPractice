@@ -8,3 +8,13 @@ langgraph_supervisor
 pyPDF2
 langchain_text_splitters
 langchain_chroma
+
+
+
+tensorflow
+numpy
+matplotlib
+
+
+# DAY_11 --> 2_ChatBot
+langchain
