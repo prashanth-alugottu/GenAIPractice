@@ -1,11 +1,17 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
 import streamlit as st
 from google import genai
 from google.genai import types
 from PIL import Image
 from io import BytesIO
+
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except:
+    if "GEMINI_API_KEY" in st.secrets:
+        os.environ["GEMINI_API_KEY"] = st.secrets["GEMINI_API_KEY"]
 
 client = genai.Client()
 st.title("Image Generation with Gemini")
