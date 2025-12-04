@@ -2,3 +2,5 @@ langchain_openai
 python-dotenv
 langgraph
 langchain
+
+langchain_mcp_adapters
