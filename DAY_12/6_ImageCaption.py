@@ -1,13 +1,20 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
 import streamlit as st
 from google import genai
 from google.genai import types
 from PIL import Image
 from io import BytesIO
 
-st.title("Educosys Image Caption Generator")
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except:
+    if "GEMINI_API_KEY" in st.secrets:
+        os.environ["GEMINI_API_KEY"] = st.secrets["GEMINI_API_KEY"]
+
+
+st.title("Image Caption Generator with Gemini")
 client = genai.Client()
 
 uploaded_image = st.file_uploader("Upload an image for caption generation", type=["png", "jpg", "jpeg"])
@@ -30,7 +37,7 @@ if uploaded_image:
            st.error("Error generating caption")
 
 
-st.title("Educosys YouTube Video Summarizer")
+st.title("YouTube Video Summarizer")
 youtube_url = st.text_input("Enter YouTube Video URL")
 
 
