@@ -2,82 +2,32 @@ import os
 import asyncio
 from dotenv import load_dotenv
 load_dotenv()
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain.chat_models import init_chat_model
 from langgraph_supervisor import create_supervisor
-from langchain_core.messages import convert_to_messages
 from langgraph.prebuilt import create_react_agent
+from langchain_openai import ChatOpenAI
+import asyncio
+from langchain.chat_models import init_chat_model
 
 
 
-def pretty_print_message(message, indent=False):
-   pretty_message = message.pretty_repr(html=True)
-   if not indent:
-       print(pretty_message)
-       return
+async def run_agent(query: str):    
 
-
-   indented = "\n".join("\t" + c for c in pretty_message.split("\n"))
-   print(indented)
-   
-def pretty_print_messages(update, last_message=False):
-   is_subgraph = False
-   if isinstance(update, tuple):
-       ns, update = update
-       # skip parent graph updates in the printouts
-       if len(ns) == 0:
-           return
-
-
-       graph_id = ns[-1].split(":")[0]
-       print(f"Update from subgraph {graph_id}:")
-       print("\n")
-       is_subgraph = True
-
-
-   for node_name, node_update in update.items():
-       update_label = f"Update from node {node_name}:"
-       if is_subgraph:
-           update_label = "\t" + update_label
-
-
-       print(update_label)
-       print("\n")
-
-
-       messages = convert_to_messages(node_update["messages"])
-       if last_message:
-           messages = messages[-1:]
-
-
-       for m in messages:
-           pretty_print_message(m, indent=is_subgraph)
-       print("\n")
-
-
-
-async def run_agent(query: str):
-    client = MultiServerMCPClient(
-      {
-        "tavily-remote": {
-         "command": "npx",
-         "args": [
-           "-y",
-          "mcp-remote",
-          "https://mcp.tavily.com/mcp/?tavilyApiKey=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"
-         ],
-         "transport":"stdio"
-       }
-    }
-    )
-    tools = await client.get_tools()
+    tools = []
+    print(f"========>>>>  {tools}")
     OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-    model = init_chat_model(model="openai:gpt-4.1",api_key=OPENAI_KEY)
+    model = ChatOpenAI(model="gpt-4o-mini",
+                   temperature=0.2,
+                   max_tokens=100,
+                   timeout=30)
     
+    # model = init_chat_model(model="openai:gpt-4.1", api_key = os.getenv("OPENAI_API_KEY"))
+
+
+
     stock_finder_agent = create_react_agent(model, tools, prompt=""" You are a stock research analyst specializing in the Indian Stock Market (NSE). Your task is to select 2 promising, actively traided NSE-listed stocks for short term trading (buy/sell) based on recent performance, news buzz,volume or technical strength.
-    Avoid penny stocks and illiquid companies.
-    Output should include stock names, tickers, and brief reasoning for each choice.
-    Respond in structured plain text format.""", name = "stock_finder_agent")
+   Avoid penny stocks and illiquid companies.
+   Output should include stock names, tickers, and brief reasoning for each choice.
+   Respond in structured plain text format.""", name = "stock_finder_agent")
 
 
     market_data_agent = create_react_agent(model, tools, prompt="""You are a market data analyst for Indian stocks listed on NSE. Given a list of stock tickers (eg RELIANCE, INFY), your task is to gather recent market information for each stock, including:
@@ -115,12 +65,15 @@ async def run_agent(query: str):
    Your goal is to provide practical. near-term trading advice for the next trading day.
       
    Keep the response concise and clearly structured.""", name = "price_recommender_agent")
-    
+
+
+
+
     supervisor = create_supervisor(
-        model=init_chat_model(model="openai:gpt-4.1"),
-        agents=[stock_finder_agent, market_data_agent, news_alanyst_agent, price_recommender_agent],
-        prompt=(
-          "You are a supervisor managing four agents:\n"
+       model=init_chat_model("openai:gpt-4.1"),
+       agents=[stock_finder_agent, market_data_agent, news_alanyst_agent, price_recommender_agent],
+       prompt=(
+           "You are a supervisor managing four agents:\n"
            "- a stock_finder_agent. Assign research-related tasks to this agent and pick 2 promising NSE stocks\n"
            "- a market_data_agent. Assign tasks to fetch current market data (price, volume, trends)\n"
            "- a news_alanyst_agent. Assign task to search and summarize recent news\n"
@@ -128,10 +81,11 @@ async def run_agent(query: str):
            "Assign work to one agent at a time, do not call agents in parallel.\n"
            "Do not do any work yourself."
            "Make sure you complete till end and do not ask for proceed in between the task."
-        ),
-        add_handoff_messages=True,
-        output_mode="full_history"
+       ),
+       add_handoff_back_messages=True,
+       output_mode="full_history",
     ).compile()
+
     
     
     for chunk in supervisor.stream(
@@ -144,11 +98,7 @@ async def run_agent(query: str):
         ]
       }
     ):
-      pretty_print_messages(chunk, last_message=True)
-      
-    
-    
-    final_message_history = chunk["supervisor"]["messages"]
+      print("=====>>> Response ",chunk)
       
 if __name__ == "__main__":
   asyncio.run(run_agent("Give me good stock recommendation from NSE"))

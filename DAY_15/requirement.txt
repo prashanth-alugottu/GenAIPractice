@@ -1,0 +1,7 @@
+langchain
+langgraph
+python-dotenv
+langchain_mcp_adapters
+tavily-python
+langchain_openai
+langgraph_supervisor
